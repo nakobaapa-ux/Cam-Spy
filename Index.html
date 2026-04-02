@@ -82,35 +82,3 @@
     </script>
 </body>
 </html>
-                const finalUrl = `${currentUrl}?mode=target`;
-                const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(finalUrl)}`;
-                
-                document.getElementById('qr-display').src = qrApi;
-                document.getElementById('qr-box').style.display = 'block';
-                log("Access QR Generated.");
-            }
-        }
-    </script>
-</body>
-</html>
-                // Timeout check
-                setTimeout(() => {
-                    if(!document.getElementById('remote-video').srcObject) {
-                        log("Koneksi lambat... Pastikan target sudah klik VERIFIKASI.");
-                    }
-                }, 5000);
-            }
-
-            function generateQR() {
-                const currentUrl = window.location.href.split('?')[0];
-                const finalUrl = `${currentUrl}?mode=target`;
-                const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(finalUrl)}`;
-                
-                document.getElementById('qr-display').src = qrApi;
-                document.getElementById('qr-box').style.display = 'block';
-                log("QR Code di-generate.");
-            }
-        }
-    </script>
-</body>
-</html>
